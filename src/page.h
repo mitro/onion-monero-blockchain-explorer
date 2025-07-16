@@ -4412,7 +4412,7 @@ json_transaction(string tx_hash_str)
     // parse tx hash string to hash object
     crypto::hash tx_hash;
 
-    if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
+    if (!epee::string_tools::hex_to_pod(tx_hash_str, tx_hash))
     {
         j_data["title"] = fmt::format("Cant parse tx hash: {:s}", tx_hash_str);
         return j_response;
