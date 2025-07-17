@@ -4357,16 +4357,9 @@ namespace xmreg
                 cout << "  txd.hash: " << pod_to_hex(txd.hash) << endl;
                 cout << "  txd.size: " << txd.size << endl;
                 cout << "  txd.fee: " << txd.fee << endl;
-                cout << "  txd.tx_blob_size: " << txd.tx_blob_size << endl;
-                cout << "  txd.receive_time: " << txd.receive_time << endl;
-                cout << "  txd.relayed: " << (txd.relayed ? "true" : "false") << endl;
-                cout << "  txd.double_spend_seen: " << (txd.double_spend_seen ? "true" : "false") << endl;
                 cout << "  txd.output_pub_keys.size(): " << txd.output_pub_keys.size() << endl;
                 cout << "  txd.input_key_imgs.size(): " << txd.input_key_imgs.size() << endl;
                 cout << "  txd.no_confirmations: " << txd.no_confirmations << endl;
-                cout << "  txd.block_height: " << txd.block_height << endl;
-                cout << "  txd.coinbase: " << (txd.coinbase ? "true" : "false") << endl;
-                cout << "  txd.extra: " << epee::string_tools::buff_to_hex_nodelimer(txd.extra) << endl;
 
                 // Log individual outputs
                 for (size_t i = 0; i < txd.output_pub_keys.size(); ++i)
