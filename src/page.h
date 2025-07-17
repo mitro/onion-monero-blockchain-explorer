@@ -4399,6 +4399,7 @@ namespace xmreg
 
             // append additional info from block, as we don't
             // return block data in this function
+            j_data["tx_hash"] = pod_to_hex(tx_hash);
             j_data["timestamp"] = tx_timestamp;
             j_data["timestamp_utc"] = blk_timestamp_utc;
             j_data["block_height"] = block_height;
@@ -6355,7 +6356,14 @@ namespace xmreg
 
             // get tx hash
 
-            txd.hash = get_transaction_hash(tx);
+            if (!tx.pruned)
+            {
+                txd.hash = get_transaction_hash(tx);
+            }
+            else
+            {
+                txd.hash = get_pruned_transaction_hash(tx, tx.prunable_hash);
+            }
 
             // get tx public key from extra
             // this check if there are two public keys
