@@ -53,8 +53,9 @@ COPY . /root/onion-monero-blockchain-explorer/
 WORKDIR /root/onion-monero-blockchain-explorer/build
 RUN cmake .. && make -j"$(cat /nproc)"
 
-# Use ldd and awk to bundle up dynamic libraries for the final image
-RUN zip /lib.zip $(ldd xmrblocks | grep -E '/[^\ ]*' -o)
+# Use ldd and awk to bundle up dynamic libraries for the final image.
+# monerod ships in the same image (see below), so bundle its libraries too.
+RUN zip /lib.zip $(ldd xmrblocks /root/monero/build/release/bin/monerod | grep -E '/[^\ ]*' -o | sort -u)
 
 # Use ubuntu:latest as base for final image
 FROM ubuntu:latest AS final
@@ -62,10 +63,11 @@ FROM ubuntu:latest AS final
 # Added DEBIAN_FRONTEND=noninteractive to workaround tzdata prompt on installation
 ENV DEBIAN_FRONTEND="noninteractive"
 
-# Update Ubuntu packages and install unzip to handle bundled libs from builder stage
+# Update Ubuntu packages and install unzip to handle bundled libs from builder
+# stage, and curl for monerod's healthcheck
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get install -y --no-install-recommends unzip \
+    && apt-get install -y --no-install-recommends unzip curl \
     && apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY --from=builder /lib.zip .
@@ -84,6 +86,14 @@ USER monero
 WORKDIR /home/monero
 COPY --chown=monero:monero --from=builder /root/onion-monero-blockchain-explorer/build/xmrblocks .
 COPY --chown=monero:monero --from=builder /root/onion-monero-blockchain-explorer/build/templates ./templates/
+
+# monerod from the same build as xmrblocks. Both open the same LMDB, which
+# keeps process-shared mutexes in lock.mdb whose layout depends on the C
+# library: a musl monerod (e.g. an Alpine image) and this glibc xmrblocks
+# misread each other's locks — whichever opens the database first wins, and
+# the other waits forever or hangs. Running monerod from this image gives
+# both sides the same glibc and LMDB, so start order no longer matters.
+COPY --chown=monero:monero --from=builder /root/monero/build/release/bin/monerod .
 
 # Expose volume used for lmdb access by xmrblocks
 VOLUME /home/monero/.bitmonero
