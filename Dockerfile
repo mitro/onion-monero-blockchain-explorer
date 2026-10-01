@@ -1,5 +1,7 @@
-# Use ubuntu:latest as base for builder stage image
-FROM ubuntu:latest as builder
+# Pinned, not :latest — Ubuntu 26.04's CMake 4 refuses Monero v0.18's
+# try_compile test projects (cmake_minimum_required < 3.5). Bump together
+# with MONERO_BRANCH.
+FROM ubuntu:24.04 AS builder
 
 # Set Monero branch/tag to be used for monerod compilation
 ARG MONERO_BRANCH=v0.18.4.0
@@ -57,8 +59,8 @@ RUN cmake .. && make -j"$(cat /nproc)"
 # monerod ships in the same image (see below), so bundle its libraries too.
 RUN zip /lib.zip $(ldd xmrblocks /root/monero/build/release/bin/monerod | grep -E '/[^\ ]*' -o | sort -u)
 
-# Use ubuntu:latest as base for final image
-FROM ubuntu:latest AS final
+# Same release as the builder, so the bundled libraries match
+FROM ubuntu:24.04 AS final
 
 # Added DEBIAN_FRONTEND=noninteractive to workaround tzdata prompt on installation
 ENV DEBIAN_FRONTEND="noninteractive"
